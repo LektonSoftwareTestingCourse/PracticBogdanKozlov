@@ -1,16 +1,18 @@
 name: Practice Issue Check
 
-# Сдача студенческих работ — через Issue с label `practice-N`.
-# Этот workflow реагирует на открытие/изменение/метку Issue, определяет ветку
-# из тела Issue и публикует вердикт по последнему CI-прогону этой ветки.
+# Сдача студенческих работ — через Issue с label `practice-N` в эталонном репозитории.
+# Каждый студент работает в своём отдельном репозитории (Practic{Имя}{Фамилия}),
+# поэтому этот workflow НЕ читает CI чужого репозитория (это требовало бы токенов).
+# Вместо этого он валидирует, что студент приложил к Issue:
+#   1) ссылку на свой репозиторий;
+#   2) ссылку на конкретный Actions run (зелёный прогон CI в своём репозитории).
+# Вердикт по CI преподаватель проверяет вручную по приложенной ссылке.
 
 on:
   issues:
-    types: [opened, labeled, edited]
+    types: [opened, edited, labeled]
 
 permissions:
-  contents: read
-  actions: read
   issues: write
 
 jobs:
@@ -19,67 +21,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Extract practice label and branch
-        id: ctx
+      - name: Validate submission links
         run: |
-          LABEL=$(echo '${{ toJson(github.event.issue.labels.*.name) }}' | jq -r '.[] | select(startswith("practice-"))' | head -n1)
-          BODY=$(gh issue view ${{ github.event.issue.number }} --json body -q .body)
-          BRANCH_NAME=$(printf '%s' "$BODY" | grep -oE 'practice-[0-9]+-[A-Za-z0-9_-]+' | head -n1)
-          echo "label=${LABEL}" >> "$GITHUB_OUTPUT"
-          echo "branch=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ github.token }}
+          BODY=$(gh issue view "${{ github.event.issue.number }}" --json body -q .body)
 
-      - name: Validate branch
-        id: validate
-        run: |
-          if [ -z "${{ steps.ctx.outputs.branch }}" ]; then
-            gh issue comment ${{ github.event.issue.number }} \
-              --body "Не удалось определить ветку из тела Issue. Укажите ветку в формате \`practice-N-surname\` (например, \`practice-2-ivanov\`)."
+          REPO_URL=$(printf '%s' "$BODY" | grep -oiE 'https?://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+' | grep -viE '/actions/runs/' | head -n1)
+          RUN_URL=$(printf '%s' "$BODY" | grep -oiE 'https?://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[0-9]+' | head -n1)
+
+          MISSING=""
+          if [ -z "$REPO_URL" ]; then
+            MISSING="- ссылку на свой репозиторий (например, \`https://github.com/<org>/Practic<Имя><Фамилия>\`)"
+          fi
+          if [ -z "$RUN_URL" ]; then
+            MISSING="${MISSING}
+          - ссылку на Actions run (скопируйте URL зелёного прогона CI из своего репозитория)"
+          fi
+
+          if [ -n "$MISSING" ]; then
+            gh issue comment "${{ github.event.issue.number }}" \
+              --body "Не удалось найти обязательные ссылки в теле Issue. Добавьте:${MISSING}"
             exit 1
           fi
-        env:
-          GH_TOKEN: ${{ github.token }}
 
-      - name: Look up CI status for branch
-        id: ci
-        run: |
-          BRANCH="${{ steps.ctx.outputs.branch }}"
-          RUN=$(gh run list --branch "$BRANCH" --limit 1 --json conclusion,status,databaseId,html_url -q '.[0] // empty')
-          if [ -z "$RUN" ]; then
-            echo "no_run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "no_run=false" >> "$GITHUB_OUTPUT"
-            printf '%s' "$RUN" > run.json
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Post verdict
-        run: |
-          ISSUE=${{ github.event.issue.number }}
-          BRANCH="${{ steps.ctx.outputs.branch }}"
-
-          if [ "${{ steps.ci.outputs.no_run }}" = "true" ]; then
-            gh issue comment "$ISSUE" \
-              --body "Для ветки \`${BRANCH}\` не найден CI-прогон. Запушьте ветку ещё раз и убедитесь, что CI запустился (вкладка Actions)."
-            exit 0
-          fi
-
-          STATUS=$(jq -r '.status' run.json)
-          CONCLUSION=$(jq -r '.conclusion' run.json)
-          URL=$(jq -r '.html_url' run.json)
-
-          if [ "$CONCLUSION" = "success" ]; then
-            VERDICT="✅ CI зелёный"
-          else
-            VERDICT="❌ CI красный/не завершён"
-          fi
-
-          gh issue comment "$ISSUE" \
-            --body "Проверка по label \`${{ steps.ctx.outputs.label }}\`, ветка \`${BRANCH}\`:
-            - Статус: **${STATUS}**
-            - Вердикт: **${CONCLUSION}** → ${VERDICT}
-            - Детали: ${URL}"
+          echo "Submission links are present."
         env:
           GH_TOKEN: ${{ github.token }}

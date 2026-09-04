@@ -1,13 +1,27 @@
 name: CI Pipeline
 
-# PR — только для инфраструктурных изменений от преподавателей.
-# Студенты работают через push в свою ветку + Issue с label `practice-N`.
-# Студенческие тесты не предназначены для слияния в main.
+# Каждый студент работает в своём отдельном репозитории (Practic{Имя}{Фамилия}).
+# Это ЛЁГКИЙ пайплайн: он гоняется на каждый push и проверяет только линтеры,
+# компиляцию Java-модулей и сборку frontend. Секреты и вход в registry не требуются.
+#
+# Тяжёлые проверки (docker build + smoke/e2e/load-smoke) вынесены в
+# practice-run.yml и запускаются вручную через workflow_dispatch — см.
+# docs/submission-guide.md. Так мы не расходуем Actions-минуты на docker-сборку
+# при каждом коммите.
+#
+# Студенческие тесты не предназначены для слияния в main эталонного репозитория.
+# PR — только для инфраструктурных изменений от преподавателей в эталонном репозитории.
 
 on:
   push:
     branches:
     - '**'
+    paths-ignore:
+    - 'docs/**'
+    - 'tz/**'
+    - '**/*.md'
+    - '**/*.puml'
+    - '**/*.png'
   pull_request:
     branches: [ main ]
     paths:
@@ -20,6 +34,11 @@ on:
     - 'scripts/smoke-test.ps1'
     - 'scripts/load-smoke.sh'
     - 'tz/**'
+
+# Отменяем предыдущие незавершённые прогоны в том же репозитории/ветке.
+concurrency:
+  group: ci-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   base-lint:
@@ -96,221 +115,3 @@ jobs:
     - name: Build frontend application
       working-directory: ./services/dashboard
       run: npm run build
-
-  smoke-tests:
-    runs-on: ubuntu-latest
-    needs: [ java-services, frontend-dashboard ]
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Normalize GHCR namespace to lowercase
-      run: echo "GHCR_USER=${OWNER,,}" >> "$GITHUB_ENV"
-      env:
-        OWNER: ${{ github.repository_owner }}
-
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y jq bc
-
-    - name: Create .env file
-      run: cp .env.example .env
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Cache Maven/npm build mounts
-      uses: actions/cache@v4
-      with:
-        path: |
-          var-cache-m2
-          var-cache-npm
-        key: docker-build-mounts-${{ hashFiles('services/**/pom.xml', 'services/dashboard/package.json') }}
-        restore-keys: |
-          docker-build-mounts-
-
-    - name: Inject build mounts into Buildx
-      uses: reproducible-containers/buildkit-cache-dance@v3.1.2
-      with:
-        cache-map: |
-          {
-            "var-cache-m2": "/root/.m2",
-            "var-cache-npm": "/root/.npm"
-          }
-        skip-extraction: false
-
-    - name: Build Docker images
-      run: docker compose build
-      env:
-        GHCR_USER: ${{ env.GHCR_USER }}
-
-    - name: Start all services
-      run: docker compose up -d
-      env:
-        GHCR_USER: ${{ env.GHCR_USER }}
-
-    - name: Wait for services to be ready
-      run: |
-        echo "Waiting for services to start"
-        for i in {1..60}; do
-          if curl -s http://localhost:8080/health > /dev/null 2>&1; then
-            break
-          fi
-          echo "Waiting ($i/60)"
-          sleep 5
-        done
-        sleep 15
-
-    - name: Run smoke tests
-      run: chmod +x scripts/smoke-test.sh && ./scripts/smoke-test.sh
-
-    - name: Show logs on failure
-      if: failure()
-      run: docker compose logs --tail=100
-
-    - name: Cleanup
-      if: always()
-      run: docker compose down -v
-
-  e2e-tests:
-    runs-on: ubuntu-latest
-    needs: [ java-services, frontend-dashboard ]
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Normalize GHCR namespace to lowercase
-      run: echo "GHCR_USER=${OWNER,,}" >> "$GITHUB_ENV"
-      env:
-        OWNER: ${{ github.repository_owner }}
-
-    - name: Set up JDK 21 for E2E
-      uses: actions/setup-java@v5
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: 'maven'
-
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y jq bc
-
-    - name: Create .env file
-      run: cp .env.example .env
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Cache Maven/npm build mounts
-      uses: actions/cache@v4
-      with:
-        path: |
-          var-cache-m2
-          var-cache-npm
-        key: docker-build-mounts-${{ hashFiles('services/**/pom.xml', 'services/dashboard/package.json') }}
-        restore-keys: |
-          docker-build-mounts-
-
-    - name: Inject build mounts into Buildx
-      uses: reproducible-containers/buildkit-cache-dance@v3.1.2
-      with:
-        cache-map: |
-          {
-            "var-cache-m2": "/root/.m2",
-            "var-cache-npm": "/root/.npm"
-          }
-        skip-extraction: false
-
-    - name: Build Docker images
-      run: docker compose build
-      env:
-        GHCR_USER: ${{ env.GHCR_USER }}
-
-    - name: Start all services
-      run: docker compose up -d
-      env:
-        GHCR_USER: ${{ env.GHCR_USER }}
-
-    - name: Wait for services to be ready
-      run: |
-        echo "Waiting for services to start"
-        for i in {1..60}; do
-          not_ready=$(docker compose ps --format '{{.Health}}' | grep -E 'starting|unhealthy' | wc -l | tr -d ' ')
-          if [ "$not_ready" == "0" ]; then
-            break
-          fi
-          echo "Waiting ($i/60)"
-          sleep 5
-        done
-        sleep 15
-
-    - name: Run e2e tests
-      run: mvn -f services/pom.xml -pl e2e-tests -am test -DskipE2eTests=false
-
-    - name: Show logs on failure
-      if: failure()
-      run: docker compose logs --tail=100
-
-    - name: Cleanup
-      if: always()
-      run: docker compose down -v
-
-  load-smoke:
-    runs-on: ubuntu-latest
-    needs: [java-services, frontend-dashboard]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Normalize GHCR namespace to lowercase
-        run: echo "GHCR_USER=${OWNER,,}" >> "$GITHUB_ENV"
-        env:
-          OWNER: ${{ github.repository_owner }}
-
-      - name: Create .env file
-        run: cp .env.example .env
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker images
-        run: docker compose build
-        env:
-          GHCR_USER: ${{ env.GHCR_USER }}
-
-      - name: Start all services
-        run: docker compose up -d
-        env:
-          GHCR_USER: ${{ env.GHCR_USER }}
-
-      - name: Wait for services
-        run: |
-          for i in {1..60}; do
-            if curl -s http://localhost:8080/health > /dev/null 2>&1; then break; fi
-            sleep 5
-          done
-          sleep 15
-
-      - name: Generate test cards
-        run: |
-          curl -X POST http://localhost:8080/api/cards/generate \
-            -H "Content-Type: application/json" \
-            -d '{"count":100,"bins":["400000","400001","400002","400003","400004"]}'
-
-      - name: Run load smoke script (CI smoke check — 10 transactions only)
-        env:
-          LOAD_COUNT: 10
-        run: |
-          if [ -f scripts/load-smoke.sh ]; then
-            chmod +x scripts/load-smoke.sh && ./scripts/load-smoke.sh
-          else
-            echo "⚠️ scripts/load-smoke.sh not found — skipping load test"
-          fi
-
-      - name: Show logs on failure
-        if: failure()
-        run: docker compose logs --tail=100
-
-      - name: Cleanup
-        if: always()
-        run: docker compose down -v

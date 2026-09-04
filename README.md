@@ -29,9 +29,9 @@
 ## Быстрый старт
 
 ```bash
-# 1. Клонировать репозиторий
-git clone https://github.com/LektonSoftwareTestingCourse/Practic.git
-cd Practic
+# 1. Клонировать СВОЙ репозиторий (его выдаёт куратор), а не эталонный
+git clone https://github.com/<org>/Practic<Имя><Фамилия>.git
+cd Practic<Имя><Фамилия>
 
 # 2. Скопировать .env (переменные окружения уже настроены на нужные порты)
 cp .env.example .env
