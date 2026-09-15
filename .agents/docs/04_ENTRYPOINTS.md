@@ -1,7 +1,7 @@
 # Точки входа
 
 > HTTP, CLI, CI, UI, очереди и WebSocket — как и чем запускается проект.
-> **Обновлять при:** добавлении эндпоинта, make-цели, workflow, порта или очереди.
+> **Обновлять при изменении:** `services/`, `Makefile`, `scripts/`, `.github/workflows/`, `docs/api/openapi.yaml`
 
 ## Обзор
 
