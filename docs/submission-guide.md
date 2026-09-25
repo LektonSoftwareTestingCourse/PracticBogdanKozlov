@@ -30,7 +30,7 @@
 | Практика | Артефакт | Путь в репозитории | CI-проверка | LLM-проверка |
 |:---:|---|---|:---:|:---:|
 | 1 | Запуск СМП + smoke | — (health-check сервисов) | ✅ `smoke-tests` (вручную) | — |
-| 2 | Тест-дизайн | `docs/practice-2/test-design.md` + `docs/practice-2/pict/` | ✅ структура артефакта и модель PICT | ✅ skill-1 |
+| 2 | Тест-дизайн | `docs/practice-2/test-strategy.md`, `test-plan.md`, `test-design.md`, `checklists.md` + `docs/practice-2/pict/` | ✅ наличие и структура четырёх документов, модель PICT | ✅ skill-1 |
 | 3 | Unit-тесты | `services/{service}/src/test/java/...` | ✅ `java-services` (авто) | — |
 | 4 | API/интеграционные тесты | `services/{service}/src/test/java/...` | ✅ `java-services` (авто) | ✅ skill-4 (бонус) |
 | 5 | E2E-отчёт + баг-репорты | `docs/practice-5/e2e-report.md` | ✅ `e2e-tests` (вручную) | ✅ skill-2 |
