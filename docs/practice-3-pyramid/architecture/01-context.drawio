@@ -1,0 +1,109 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Страница-1" id="5Tp1G1Rb8769RTWpgGVv">
+    <mxGraphModel dx="1294" dy="875" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="1iWasve5H8SDSuQapHLi-27" parent="1" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;whiteSpace=wrap;" value="" vertex="1">
+          <mxGeometry height="410" width="780" x="80" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-1" edge="1" parent="1" source="1iWasve5H8SDSuQapHLi-6" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="1iWasve5H8SDSuQapHLi-2" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="350" y="480" as="sourcePoint" />
+            <mxPoint x="480" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="СМП" vertex="1">
+          <mxGeometry height="60" width="120" x="550" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-4" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Пользователь" vertex="1">
+          <mxGeometry height="60" width="30" x="120" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Merchant acquirer simulator&lt;div&gt;&lt;br&gt;&lt;div&gt;Эмуляция операций с правилами мерчантов&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="160" x="240" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Terminal simulator&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Эмуляция операций по терминалу&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="160" x="240" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Dashboard&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;UI статистика по системе&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="160" x="240" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="BIN Lockup&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;issuerID и информация об эмитенте&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="140" x="670" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-9" edge="1" parent="1" source="1iWasve5H8SDSuQapHLi-4" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="1iWasve5H8SDSuQapHLi-5" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="135" y="360" />
+            </Array>
+            <mxPoint x="390" y="400" as="sourcePoint" />
+            <mxPoint x="440" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-10" edge="1" parent="1" source="1iWasve5H8SDSuQapHLi-4" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="1iWasve5H8SDSuQapHLi-6" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="390" y="400" as="sourcePoint" />
+            <mxPoint x="440" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-11" edge="1" parent="1" source="1iWasve5H8SDSuQapHLi-4" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="1iWasve5H8SDSuQapHLi-7" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="135" y="600" />
+            </Array>
+            <mxPoint x="390" y="400" as="sourcePoint" />
+            <mxPoint x="440" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-14" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="HTTP" vertex="1">
+          <mxGeometry height="30" width="60" x="140" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-15" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="HTTP" vertex="1">
+          <mxGeometry height="30" width="60" x="140" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-16" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="HTTP" vertex="1">
+          <mxGeometry height="30" width="60" x="140" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-18" edge="1" parent="1" source="1iWasve5H8SDSuQapHLi-5" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="1iWasve5H8SDSuQapHLi-2" value="">
+          <mxGeometry height="50" relative="1" width="50" x="-0.1533" as="geometry">
+            <Array as="points">
+              <mxPoint x="610" y="360" />
+            </Array>
+            <mxPoint x="390" y="400" as="sourcePoint" />
+            <mxPoint x="440" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-19" edge="1" parent="1" source="1iWasve5H8SDSuQapHLi-7" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="1iWasve5H8SDSuQapHLi-2" value="">
+          <mxGeometry height="50" relative="1" width="50" x="-0.1533" as="geometry">
+            <Array as="points">
+              <mxPoint x="610" y="600" />
+            </Array>
+            <mxPoint x="390" y="400" as="sourcePoint" />
+            <mxPoint x="440" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-21" edge="1" parent="1" source="1iWasve5H8SDSuQapHLi-2" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="1iWasve5H8SDSuQapHLi-8" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="480" />
+            </Array>
+            <mxPoint x="390" y="400" as="sourcePoint" />
+            <mxPoint x="440" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-22" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Rest API&lt;br&gt;POST /api/transaction" vertex="1">
+          <mxGeometry height="30" width="140" x="400" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-23" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Rest API&lt;br&gt;POST /api/transaction" vertex="1">
+          <mxGeometry height="30" width="140" x="400" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-25" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="WebSocket &amp;amp; API&lt;div&gt;/ws/transactions&lt;/div&gt;" vertex="1">
+          <mxGeometry height="30" width="140" x="400" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="1iWasve5H8SDSuQapHLi-26" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Rest API&lt;br&gt;GET /api/bin/{bin}" vertex="1">
+          <mxGeometry height="30" width="140" x="670" y="480" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
