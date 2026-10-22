@@ -1,0 +1,26 @@
+card_status: ACTIVE, INACTIVE, BLOCKED, EXPIRED
+expiry: future, current_month, expired
+amount_vs_daily: below, equal, above
+amount_vs_monthly: below, equal, above
+amount_vs_balance: below, equal, above
+terminal_type: POS, ATM, ECOM
+mcc: grocery, restaurant, electronics, travel
+response: ok, card_not_found, cms_timeout
+
+IF [cms_response] <> "ok" THEN [card_status] = "ACTIVE"
+    AND [expiry] = "future"
+    AND [amount_vs_daily] = "below"
+    AND [amount_vs_monthly] = "below"
+    AND [amount_vs_balance] = "below";
+
+IF [card_status] <> "ACTIVE" THEN [cms_response] = "ok"
+    AND [expiry] = "future"
+    AND [amount_vs_daily] = "below"
+    AND [amount_vs_monthly] = "below"
+    AND [amount_vs_balance] = "below";
+
+IF [expiry] = "expired" THEN [cms_response] = "ok"
+    AND [card_status] = "ACTIVE"
+    AND [amount_vs_daily] = "below"
+    AND [amount_vs_monthly] = "below"
+    AND [amount_vs_balance] = "below";

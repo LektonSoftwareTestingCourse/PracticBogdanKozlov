@@ -1,0 +1,62 @@
+@startuml
+title А6. Фактические статусы карты, резерва и результата транзакции
+scale max 1600*900
+hide empty description
+state "Card.status" as Card {
+  [*] --> ACTIVE : выпуск карты
+  ACTIVE --> INACTIVE : bulkUpdateStatus
+  INACTIVE --> ACTIVE : bulkUpdateStatus
+  ACTIVE --> BLOCKED : bulkUpdateStatus
+  BLOCKED --> ACTIVE : bulkUpdateStatus
+  ACTIVE --> DELETED : soft delete
+  INACTIVE --> DELETED : soft delete
+  BLOCKED --> DELETED : soft delete
+  EXPIRED --> DELETED : soft delete
+}
+state "Reservation.status" as Reservation {
+  [*] --> RESERVED : reserve сохранён
+  RESERVED --> ROLLED_BACK : rollback сохранён
+  ROLLED_BACK --> [*]
+}
+state "TransactionStatus / обработка" as Tx {
+  [*] --> PROCESSING
+  state "Проверки Authorization\n(этап процесса, не enum)" as PROCESSING
+  state "APPROVED\n(TransactionStatus)" as APPROVED
+  state "DECLINED\n(TransactionStatus)" as DECLINED
+  PROCESSING --> APPROVED : проверки пройдены + reserve успешен
+  PROCESSING --> DECLINED : отказ проверки / зависимости
+  APPROVED --> [*] : Logger принял сообщение
+  DECLINED --> [*] : API возвращает DECLINED; запись Logger зависит от RabbitMQ
+  APPROVED --> COMPENSATING : Logger publish failed
+  state "Компенсация\n(этап процесса, не enum)" as COMPENSATING
+  COMPENSATING --> [*] : rollback попытан; API ответ DECLINED / 96
+}
+Card -[hidden]-> Reservation
+Reservation -[hidden]-> Tx
+note right of Card
+  CardStatus enum: ACTIVE, INACTIVE, BLOCKED, EXPIRED, DELETED.
+  bulkUpdateStatus может назначить любой CardStatus, в том числе
+  вернуть DELETED-карту в другой статус. Показаны примеры вызовов.
+  Истечение expiryDate само по себе не меняет Card.status:
+  Authorization лишь отклоняет запрос как просроченный.
+  Источники: CardStatus.java, CardServiceImpl.java,
+  AuthServiceImpl.java.
+end note
+note right of Reservation
+  ReservationStatus enum: RESERVED, ROLLED_BACK.
+  При reserve создаётся резерв и уменьшается баланс;
+  при rollback сохраняется возврат и статус ROLLED_BACK.
+  Повторный rollback завершается конфликтом.
+  Источники: ReservationStatus.java, CardServiceImpl.java,
+  Reservation.java, Card.java.
+end note
+note right of Tx
+  TransactionStatus Logger содержит только APPROVED/DECLINED.
+  PROCESSING и COMPENSATING — этапы RouteService, не статусы.
+  При ошибке публикации после APPROVED Switch вызывает rollback,
+  но ответ DECLINED/96 возвращается даже если rollback не удался.
+  Событие не было принято RabbitMQ, поэтому записи Logger нет.
+  Источники: TransactionStatus.java, RouteService.java,
+  LoggerClient.java, AuthorizationClient.java.
+end note
+@enduml
