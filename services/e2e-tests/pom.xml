@@ -95,10 +95,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-<!--                <configuration>-->
-<!--                    <skipTests>${skipE2eTests}</skipTests>-->
-<!--                    <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>-->
-<!--                </configuration>-->
+                <configuration>
+                    <skipTests>${skipE2eTests}</skipTests>
+                </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.apache.maven.surefire</groupId>

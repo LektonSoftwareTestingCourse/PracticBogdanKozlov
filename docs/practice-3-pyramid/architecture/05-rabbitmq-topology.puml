@@ -1,0 +1,48 @@
+@startuml
+title А5. RabbitMQ topology: producers, consumers, DLX/DLQ
+scale max 1600*900
+left to right direction
+component "Switch\nLoggerClient" as sw
+queue "smp.transactions\n(topic, durable)" as txex
+queue "transaction-log\ndurable; x-max-delivery=3" as txq
+component "TransactionLogListener" as txconsumer
+database "PostgreSQL\ntransactions" as txdb
+queue "smp.transactions.dlx\n(direct, durable)" as txdlx
+queue "transaction-log-dlq\ndurable; TTL 60s" as txdlq
+database "PostgreSQL\noutbox_event" as outdb
+component "Card Management\nOutboxEventProcessorImpl" as outbox
+queue "smp.card-events\n(topic, durable)" as cardex
+queue "card-notifications\ndurable; x-max-delivery=3" as cardq
+component "CardEventListener" as cardconsumer
+database "PostgreSQL\ncard_notifications" as notifdb
+queue "smp.card-events.dlx\n(direct, durable)" as carddlx
+queue "card-notifications-dlq\ndurable; TTL 60s" as carddlq
+sw ..> txex : TransactionRequest; routing key transaction.log
+txex ..> txq : bind transaction.log
+txq ..> txconsumer : AMQP delivery
+txconsumer --> txdb : save transaction
+txq --> txdlx : exhausted/rejected delivery\nrouting key transaction-log
+txdlx --> txdlq : bind transaction-log
+outdb --> outbox : read PENDING events
+outbox ..> cardex : CardEvent; routing key card.<EventClass>
+cardex ..> cardq : bind card.*
+cardq ..> cardconsumer : AMQP delivery
+cardconsumer --> notifdb : save notification
+cardq --> carddlx : exhausted/rejected delivery\nrouting key card-notifications
+carddlx --> carddlq : bind card-notifications
+note bottom
+Publisher: Switch config sets CORRELATED confirms; assignment/docs claim
+2s timeout and rollback after missing confirm. Current LoggerClient calls
+convertAndSend but does not explicitly await CorrelationData; confirm-to-
+rollback path should be validated against implementation.
+
+Queues are durable; code declares x-max-delivery=3, DLX bindings, and
+DLQ TTL=60,000ms. Actual retry/redelivery semantics also depend on listener
+container/broker setup. Outbox has a separate max retry count 3 and marks
+failure after exhausting publish retries; these are not consumer redeliveries.
+Sources: switch/config/RabbitMQConfig.java; transaction-logger/config/
+RabbitMQConfig.java; card-management/config/RabbitMQConfig.java;
+notification/config/RabbitMQConfig.java; card-management/services/
+OutboxEventProcessorImpl.java.
+end note
+@enduml

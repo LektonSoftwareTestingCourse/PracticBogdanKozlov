@@ -1,0 +1,209 @@
+<mxfile host="app.diagrams.net" agent="Codex">
+  <diagram id="03-components" name="А3 Components">
+    <mxGraphModel dx="3349" dy="1182" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=28;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;fontSize=14;fontStyle=1;" value="Authorization Service" vertex="1">
+          <mxGeometry height="620" width="845" x="-110" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="17" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="BIN Lookup" vertex="1">
+          <mxGeometry height="60" width="145" x="65" y="305" as="geometry" />
+        </mxCell>
+        <mxCell id="8" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="LimitUsageRepository&lt;br&gt;JPA/JDBC" vertex="1">
+          <mxGeometry height="70" width="265" x="510" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="7" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="BinLookupClient&lt;br&gt;HTTP; 3s connect / 5s read" vertex="1">
+          <mxGeometry height="70" width="265" x="5" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="26" edge="1" parent="2" source="7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="17" value="HTTP; failure → empty">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="CardManagementClientImpl&lt;br&gt;HTTP client" vertex="1">
+          <mxGeometry height="70" width="265" x="5" y="415" as="geometry" />
+        </mxCell>
+        <mxCell id="4" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="AuthControllerImpl&lt;br&gt;REST authorize / rollback" vertex="1">
+          <mxGeometry height="70" width="265" x="5" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="5" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="AuthServiceImpl&lt;br&gt;бизнес-правила, @Transactional" vertex="1">
+          <mxGeometry height="80" width="285" x="500" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="20" edge="1" parent="2" source="4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="5" value="sync call">
+          <mxGeometry relative="1" x="-0.0435" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="330" y="50" />
+              <mxPoint x="330" y="50" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="21" edge="1" parent="2" source="5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="6" value="getCard / reserve / rollback">
+          <mxGeometry relative="1" x="0.3236" y="-15" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="420" y="90" />
+              <mxPoint x="420" y="385" />
+              <mxPoint x="137.5" y="385" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="22" edge="1" parent="2" source="5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="7" value="issuerId(PAN[0..6])">
+          <mxGeometry relative="1" x="0.6522" y="-15" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="380" y="70" />
+              <mxPoint x="380" y="185" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="23" edge="1" parent="2" source="5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="8" value="upsert limits / RRN">
+          <mxGeometry relative="1" x="0.2698" y="50" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="470" y="100" />
+              <mxPoint x="470" y="335" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="9" parent="2" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="AuthorizationEventNotifierImpl" vertex="1">
+          <mxGeometry height="70" width="285" x="500" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="24" edge="1" parent="2" source="5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="9" value="outcome event">
+          <mxGeometry relative="1" x="0.2" y="38" as="geometry">
+            <mxPoint y="-5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3" parent="1" style="swimlane;html=1;whiteSpace=wrap;startSize=28;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;fontSize=14;fontStyle=1;" value="Card Management Service" vertex="1">
+          <mxGeometry height="620" width="795" x="805" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="14" parent="3" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="ReservationRollbackRepositoryPersistenceAdapter" vertex="1">
+          <mxGeometry height="85" width="325" x="65" y="275" as="geometry" />
+        </mxCell>
+        <mxCell id="16" parent="3" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="OutboxEventProcessorImpl&lt;br&gt;reads PENDING, publishes, updates status" vertex="1">
+          <mxGeometry height="85" width="300" x="445" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="15" parent="3" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="OutboxRepository / OutboxJpaAdapter" vertex="1">
+          <mxGeometry height="70" width="300" x="445" y="335" as="geometry" />
+        </mxCell>
+        <mxCell id="37" edge="1" parent="3" source="16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="15" value="load/update">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="13" parent="3" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="ReservationRepositoryPersistenceAdapter" vertex="1">
+          <mxGeometry height="70" width="300" x="445" y="245" as="geometry" />
+        </mxCell>
+        <mxCell id="12" parent="3" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="CardRepositoryPersistenceAdapter" vertex="1">
+          <mxGeometry height="70" width="245" x="65" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="10" parent="3" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="CardController&lt;br&gt;REST endpoints" vertex="1">
+          <mxGeometry height="70" width="245" x="65" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="11" parent="3" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;" value="CardServiceImpl&lt;br&gt;domain operations" vertex="1">
+          <mxGeometry height="80" width="300" x="370" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="27" edge="1" parent="3" source="10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="11" value="sync call">
+          <mxGeometry relative="1" x="-0.1579" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="345" y="65" />
+              <mxPoint x="345" y="65" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="28" edge="1" parent="3" source="11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="12" value="read/update Card">
+          <mxGeometry relative="1" x="-0.122" y="-10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="405" y="145" />
+              <mxPoint x="152.5" y="145" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="29" edge="1" parent="3" source="11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="13" value="Reservation">
+          <mxGeometry relative="1" x="-0.025" y="8" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="30" edge="1" parent="3" source="11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="14" value="rollback">
+          <mxGeometry relative="1" x="-0.0566" y="-10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="455" y="195" />
+              <mxPoint x="345" y="195" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="31" edge="1" parent="3" source="11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="15" value="persist outbox">
+          <mxGeometry relative="1" x="-0.775" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="775" y="105" />
+              <mxPoint x="775" y="370" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="18" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fontSize=13;" value="PostgreSQL" vertex="1">
+          <mxGeometry height="90" width="230" x="670" y="735" as="geometry" />
+        </mxCell>
+        <mxCell id="19" parent="1" style="shape=mxgraph.rabbitmq.queue;whiteSpace=wrap;html=1;fontSize=13;" value="RabbitMQ&lt;br&gt;smp.card-events" vertex="1">
+          <mxGeometry height="90" width="250" x="1275" y="750" as="geometry" />
+        </mxCell>
+        <mxCell id="25" edge="1" parent="1" source="6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="10" value="HTTP sync">
+          <mxGeometry relative="1" x="-0.0502" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="710" y="500" />
+              <mxPoint x="710" y="115" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="32" edge="1" parent="1" source="12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="18" value="JDBC/JPA">
+          <mxGeometry relative="1" x="-0.8957" y="-15" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="785" y="245" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="33" edge="1" parent="1" source="13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="18" value="JDBC/JPA">
+          <mxGeometry relative="1" x="-0.2593" y="-10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1210" y="440" />
+              <mxPoint x="785" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="34" edge="1" parent="1" source="14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="18" value="JDBC/JPA">
+          <mxGeometry relative="1" x="-0.8717" y="-13" as="geometry">
+            <mxPoint y="1" as="offset" />
+            <Array as="points">
+              <mxPoint x="785" y="352.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="35" edge="1" parent="1" source="15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="18" value="JDBC/JPA">
+          <mxGeometry relative="1" x="-0.0952" y="-10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1330" y="490" />
+              <mxPoint x="785" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="36" edge="1" parent="1" source="8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;" target="18" value="JDBC/JPA">
+          <mxGeometry relative="1" x="0.5918" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="540" y="780" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="38" edge="1" parent="1" source="16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=11;labelBackgroundColor=#ffffff;dashed=1;dashPattern=8 4;" target="19" value="AMQP card.&amp;lt;EventClass&amp;gt;">
+          <mxGeometry relative="1" x="-0.3333" y="70" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
