@@ -1,0 +1,73 @@
+@startuml
+title А2. СМП — контейнеры и связи
+top to bottom direction
+scale max 1600*900
+skinparam componentStyle rectangle
+skinparam nodesep 24
+skinparam ranksep 30
+skinparam defaultFontSize 12
+
+actor "Terminal" as term
+actor "Мерчант" as merchant
+actor "Пользователь" as user
+
+rectangle "СМП / сервисы docker-compose.yaml" {
+  together {
+    component "Terminal Simulator\n:8085" as tsim
+    component "Merchant + Acquirer\n:8084" as msim
+    component "Dashboard\nReact :3000" as dash
+  }
+  together {
+    component "Gateway\n:8080\nвалидация, лимиты" as gw
+    component "Switch\n:8082\nBIN routing" as sw
+    component "Authorization\n:8083\nправила, reserve/rollback" as auth
+    component "Card Management\n:8081\nкарты, резервы, outbox" as cms
+    component "BIN Lookup\n:8096" as bin
+  }
+  together {
+    database "PostgreSQL\n:5432" as db
+    queue "RabbitMQ\nAMQP :5672\nUI :15672" as mq
+    component "Transaction Logger\n:8088\nREST + WebSocket" as log
+    component "Notification Service\n:8097" as notif
+    component "Autoscaler\noptional profile" as autoscaler
+  }
+}
+
+term --> gw : HTTP POST /api/transactions
+merchant --> gw : HTTP POST /api/transactions
+tsim --> gw : HTTP REST
+msim --> gw : HTTP REST
+user --> dash : HTTP(S)
+gw --> sw : HTTP sync
+gw --> cms : HTTP sync\n/api/cards/**
+gw --> log : HTTP sync\ntransactions/dashboard API
+gw --> tsim : HTTP sync\n/api/simulator/terminal/**
+gw --> msim : HTTP sync\n/api/simulator/merchant/**
+sw --> auth : HTTP sync authorize / rollback
+sw --> msim : HTTP sync\nacquiring fee lookup
+auth --> bin : HTTP GET /api/bin/{bin}\nsync, best-effort
+auth --> cms : HTTP sync GET / reserve / rollback
+auth --> db : JDBC/JPA limit_usage, RRN block
+cms --> db : JDBC/JPA cards, reservations, outbox
+sw ..> mq : AMQP async\nsmp.transactions / transaction.log
+mq ..> log : AMQP async\ntransaction-log
+cms ..> mq : AMQP async\nsmp.card-events / card.*
+mq ..> notif : AMQP async\ncard-notifications
+log --> db : JDBC/JPA transaction records
+notif --> db : JDBC/JPA notifications
+dash --> gw : REST
+dash --> log : REST + WebSocket
+
+note right of sw
+Switch uses a local BIN → issuerId map;
+it does not call BIN Lookup.
+Source: services/switch/.../RoutingService.java.
+end note
+note bottom of mq
+Async topology and failure mechanics: 05-rabbitmq-topology.puml.
+Switch has CORRELATED confirm mode configured, but LoggerClient does not
+explicitly wait for CorrelationData. See RouteService.java and LoggerClient.java.
+Autoscaler is optional; Prometheus/Grafana/Loki are additional observability
+infrastructure, outside the 11 named service containers listed here.
+end note
+@enduml

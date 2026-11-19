@@ -1,0 +1,56 @@
+@startuml
+title А3. Компоненты Authorization и Card Management
+scale max 1600*900
+left to right direction
+package "Authorization Service" {
+  component "AuthControllerImpl\nREST authorize / rollback" as ac
+  component "AuthServiceImpl\nбизнес-правила, @Transactional" as asvc
+  component "CardManagementClientImpl\nREST client" as cmsclient
+  component "BinLookupClient\nREST; connect 3s/read 5s" as binclient
+  component "LimitUsageRepository\nJPA/JDBC" as limits
+  component "AuthorizationEventNotifierImpl" as events
+}
+package "Card Management Service" {
+  component "CardController" as cc
+  component "CardServiceImpl" as csvc
+  component "CardRepositoryPersistenceAdapter" as cardrepo
+  component "ReservationRepositoryPersistenceAdapter" as reservrepo
+  component "ReservationRollbackRepositoryPersistenceAdapter" as rollbackrepo
+  component "OutboxRepository / OutboxJpaAdapter" as outrepo
+  component "OutboxEventProcessorImpl" as processor
+}
+cloud "BIN Lookup" as bin
+queue "RabbitTemplate → smp.card-events" as mq
+database "PostgreSQL" as db
+ac --> asvc : sync method call
+asvc --> cmsclient : getCard / reserve / rollback
+asvc --> binclient : issuerId(PAN[0..6])
+asvc --> limits : upsert limits; fetch RRN block
+asvc --> events : notify outcome
+cmsclient --> cc : HTTP sync
+binclient --> bin : HTTP sync; failures return empty
+cc --> csvc : sync method call
+csvc --> cardrepo : read/update card
+csvc --> reservrepo : reservation lifecycle
+csvc --> rollbackrepo : compensating credit
+csvc --> outrepo : persist outbox event
+cardrepo --> db : JDBC/JPA
+reservrepo --> db : JDBC/JPA
+rollbackrepo --> db : JDBC/JPA
+outrepo --> db : JDBC/JPA
+limits --> db : JDBC/JPA
+processor --> outrepo : load PENDING/update status
+processor --> mq : AMQP async publish card.<EventClass>
+note bottom of asvc
+Authorize: load card → require ACTIVE → validate expiry/funds →
+upsert daily/monthly limits → reserve → APPROVED. Failures map to
+DeclineOutcome. Source: services/authorization/.../AuthServiceImpl.java,
+DeclineOutcome.java, client/CardManagementClientImpl.java.
+end note
+note bottom of csvc
+Reserve subtracts availableBalance and stores Reservation.
+Rollback restores amount and changes Reservation to ROLLED_BACK.
+Outbox publication is a separate processor. Source: CardServiceImpl.java,
+models/Card.java, models/Reservation.java, OutboxEventProcessorImpl.java.
+end note
+@enduml

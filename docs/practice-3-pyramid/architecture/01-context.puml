@@ -1,0 +1,23 @@
+@startuml
+title А1. СМП — системный контекст
+scale max 1600*900
+left to right direction
+actor "POS-терминал / Terminal Simulator" as terminal
+actor "Мерчант / Merchant + Acquirer Simulator" as merchant
+actor "Пользователь Dashboard" as user
+rectangle "СМП\nСистема обработки платежей" as smp {
+  component "Gateway → Switch → Authorization\nCard Management; Transaction Logger;\nNotification Service; Dashboard и симуляторы" as core
+  database "PostgreSQL" as db
+  queue "RabbitMQ" as mq
+}
+cloud "BIN Lookup Service\nВнешний справочник BIN → issuerId" as bin
+terminal --> smp : Транзакция и ответ\nHTTP REST через Gateway
+merchant --> smp : Транзакция и ответ\nHTTP REST через Gateway
+user --> smp : UI; REST данные; live events\nHTTP(S) / REST / WebSocket
+smp --> bin : Разрешение issuerId по первым 6 цифрам PAN\nHTTP GET /api/bin/{bin}
+note bottom of smp
+Граница системы охватывает компоненты из docker-compose.yaml.
+Источники: docs/architecture.md; services/gateway/.../GatewayRouteProperties.java;
+services/switch/.../RouteService.java; services/authorization/.../BinLookupClient.java.
+end note
+@enduml
