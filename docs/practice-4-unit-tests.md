@@ -1,21 +1,43 @@
-# Практика 1 модуля 4 — Unit-тесты для Gateway
+# Лабораторная работа 4 — unit-тесты четырёх сервисов
 
-> **Артефакт**: №3 — Unit-тесты на JUnit 5 и Mockito
+## Выполнено
 
-## Что сделано
+| Сервис | Проверяемое поведение | Тесты |
+|---|---|---:|
+| Gateway | Агрегация health-check и валидация запроса авторизации | 18 |
+| Switch | Маршрутизация, нормализация идентификаторов, retry, клиенты downstream, rollback и маскирование PAN | 61 |
+| Authorization | Авторизация, статусы карты, срок действия, баланс, лимиты и rollback | 11 |
+| Card Management | Проверка/генерация PAN по Луну и пагинация CardService | 10 |
 
-- Добавлены изолированные unit-тесты для агрегации health-check результатов в [`HealthServiceTest.java`](../services/gateway/src/test/java/com/processing/gateway/health/HealthServiceTest.java). Mockito подменяет HTTP-клиент и конфигурацию downstream-сервисов; `StepVerifier` проверяет реактивный результат.
-- Добавлены параметризованные тесты для валидации запросов авторизации в [`TransactionRequestValidatorTest.java`](../services/gateway/src/test/java/com/processing/gateway/validation/TransactionRequestValidatorTest.java): валидный запрос, неподдерживаемый MTI, PAN неверной длины/формата, нулевая и отрицательная суммы, неверная длина валюты и MCC.
-- В существующем workflow [`ci.yml`](../.github/workflows/ci.yml) включён запуск Maven unit-тестов: до этой работы шаг собирал Java-сервисы с `-DskipTests`.
-- В [`e2e-tests/pom.xml`](../services/e2e-tests/pom.xml) восстановлено предусмотренное родительским POM условие пропуска E2E по умолчанию; E2E запускаются отдельно через профиль `e2e-tests` с поднятой СМП.
+Тесты используют JUnit 5, Mockito, параметризованные сценарии и структуру Arrange–Act–Assert. Зависимости внешних сервисов изолированы; для HTTP-клиентов используются локальные mock-серверы. Общие фикстуры размещены в `@BeforeEach`.
 
-В коде Gateway нет класса `GatewayService` или `SwitchClient`, указанного в старой инструкции. Поэтому тестируется фактическая реализация проекта: `HealthService` как компонент, изолирующий downstream-проверки, и `TransactionRequestValidator` как самостоятельная бизнес-валидация.
+В коде Gateway отсутствуют упомянутые в старой версии задания `GatewayService` и `SwitchClient`, поэтому Gateway-тесты проверяют фактические компоненты `HealthService` и `TransactionRequestValidator`.
 
-## Критерии практики
+## JaCoCo
 
-- [x] Используются JUnit 5 и Mockito.
-- [x] Тесты следуют Arrange–Act–Assert; общая фикстура создаётся через `@BeforeEach`.
-- [x] Зависимости `HealthService` замокированы, проверяется содержимое результата, а не только отсутствие исключения.
-- [x] Параметризованные тесты проверяют несколько классов невалидных входных данных.
-- [x] CI-шаг обновлён: Maven больше не запускается с `-DskipTests`.
-- [x] Полный Maven reactor на JDK 21: Gateway — 18 тестов, E2E пропущены по умолчанию.
+JaCoCo подключён для Gateway, Switch, Authorization и Card Management через общий `services/pom.xml`. Команда `mvn -f services/pom.xml -P<service> verify` запускает тесты и формирует HTML/XML в `services/<service>/target/site/jacoco/`. HTML-файл каждого отчёта называется `index.html`.
+
+Для Switch настроен quality gate на уровне всего модуля: branch coverage не ниже 70%. Последний прогон показывает 70 из 72 ветвей (97,2%); проверка JaCoCo прошла.
+
+GitHub Actions загружает четыре отчёта отдельными artifacts: `jacoco-gateway`, `jacoco-switch`, `jacoco-authorization`, `jacoco-card-management`.
+
+## Результаты последнего прогона
+
+| Сервис | Тесты | Branch coverage | Line coverage |
+|---|---:|---:|---:|
+| Gateway | 18 | 18/166 (10,8%) | 57/615 (9,3%) |
+| Switch | 61 | 70/72 (97,2%) | 253/302 (83,8%) |
+| Authorization | 11 | 17/108 (15,7%) | 97/427 (22,7%) |
+| Card Management | 10 | 21/219 (9,6%) | 34/929 (3,7%) |
+
+Общие проценты считаются по production-коду всего модуля. Поэтому они ниже в Gateway, Authorization и Card Management: в рамках лабораторной добавлены тесты выбранных бизнес-компонентов, а порог 70% задан только для ветвей Switch.
+
+Локальный общий запуск на JDK 21: `mvn -f services/pom.xml -Pgateway,switch,authorization,card-management verify`.
+
+## Критерии
+
+- [x] Написаны unit-тесты для Gateway, Switch, Authorization и Card Management.
+- [x] Используются JUnit 5, Mockito и параметризованные сценарии.
+- [x] Проверяются результаты и граничные случаи, а не только отсутствие исключений.
+- [x] JaCoCo формирует отчёт по каждому из четырёх модулей.
+- [x] Branch coverage Switch не ниже 70% и проверяется в CI.
