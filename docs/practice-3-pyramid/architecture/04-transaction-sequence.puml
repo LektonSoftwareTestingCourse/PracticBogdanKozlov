@@ -1,0 +1,85 @@
+@startuml
+title А4. Путь транзакции: APPROVED, DECLINED, компенсационный rollback
+scale max 1600*900
+autonumber
+actor Client
+participant Gateway as GW
+participant Switch as SW
+participant Authorization as AUTH
+participant "BIN Lookup" as BIN
+participant "Card Management" as CMS
+database PostgreSQL as DB
+queue RabbitMQ as MQ
+participant "Transaction Logger" as LOG
+== Happy path ==
+Client -> GW : POST /api/transactions (0100)
+GW -> GW : validate, rate limit, route
+GW -> SW : HTTP sync AuthorizationRequest
+SW -> SW : normalize IDs; extract BIN; resolve issuer
+SW -> AUTH : POST /api/internal/authorize
+AUTH -> CMS : GET /api/cards/{pan}
+CMS -> DB : JPA read card
+DB --> CMS : status, expiry, limits, balance
+CMS --> AUTH : CardModel
+AUTH -> BIN : GET /api/bin/{bin} (best-effort enrichment)
+BIN --> AUTH : issuerId or empty on error
+AUTH -> AUTH : check status/expiry/funds/limits
+AUTH -> DB : upsert limit_usage; allocate RRN block if needed
+DB --> AUTH : allowed
+AUTH -> CMS : POST /api/cards/{pan}/reserve
+CMS -> DB : update balance + Reservation + outbox
+DB --> CMS : committed
+CMS --> AUTH : reserve OK
+AUTH --> SW : APPROVED + RRN + authCode
+SW ->> MQ : publish TransactionRequest (async)
+SW --> GW : AuthorizationResponse
+GW --> Client : HTTP 200 APPROVED
+MQ ->> LOG : transaction-log consumer
+LOG -> DB : save transaction (eventual)
+note right of SW
+publisher-confirm-type=CORRELATED is configured.
+LoggerClient.log currently invokes convertAndSend without explicitly
+waiting on CorrelationData; verify claimed 2s confirm behavior in code.
+end note
+== Declined: BLOCKED card ==
+Client -> GW : POST /api/transactions (0100)
+GW -> SW : HTTP sync
+SW -> AUTH : POST authorize
+AUTH -> CMS : GET card
+CMS --> AUTH : CardModel(status=BLOCKED)
+AUTH -> AUTH : DeclineOutcome.CARD_BLOCKED
+AUTH --> SW : DECLINED + reason
+SW ->> MQ : publish declined transaction (async)
+SW --> GW : DECLINED
+GW --> Client : HTTP 200 + responseCode/reason
+MQ ->> LOG : asynchronous persistence
+note over AUTH,CMS
+Status rejection occurs before limit update and reserve.
+Source: AuthServiceImpl.authorize(), DeclineOutcome.java.
+end note
+== Reversal / rollback if logger publish fails ==
+Client -> GW : POST transaction (0100)
+GW -> SW : HTTP sync
+SW -> AUTH : authorize
+AUTH -> CMS : GET card, then POST reserve
+CMS -> DB : reduce balance; persist Reservation
+DB --> CMS : committed
+CMS --> AUTH : reserve OK
+AUTH --> SW : APPROVED + RRN
+SW ->> MQ : publish log message
+MQ --> SW : no ack / publish exception (failure path)
+SW -> AUTH : POST /api/internal/rollback (rrn, pan, amount)
+AUTH -> CMS : POST /api/cards/{pan}/rollback
+CMS -> DB : restore balance; Reservation → ROLLED_BACK
+DB --> CMS : committed
+CMS --> AUTH : rollback response
+AUTH --> SW : rollback APPROVED or DECLINED
+SW --> GW : system error / responseCode 96 per stated contract
+GW --> Client : DECLINED / system error
+note over SW,AUTH
+RouteService performs the compensation using rollback endpoint.
+The request is not necessarily a new ISO mti=0400 message;
+AuthorizationRequest exposes a reversal factory, but verify caller path.
+Source: RouteService.java, AuthorizationClient.java, AuthorizationRequest.java.
+end note
+@enduml
