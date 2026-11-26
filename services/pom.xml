@@ -31,6 +31,9 @@
         <checkstyle.version>3.6.0</checkstyle.version>
         <jacoco.version>0.8.15</jacoco.version>
         <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
+        <testcontainers.version>1.21.4</testcontainers.version>
+        <skipITs>true</skipITs>
+        <integrationTestReportsDirectory>failsafe-reports</integrationTestReportsDirectory>
         <!-- E2E require docker compose; enabled via -Pe2e-tests -->
         <skipE2eTests>true</skipE2eTests>
     </properties>
@@ -113,6 +116,22 @@
             </modules>
         </profile>
 
+
+        <profile>
+            <id>integration-tests</id>
+            <properties>
+                <skipITs>false</skipITs>
+            </properties>
+            <modules>
+                <module>common</module>
+                <module>card-management</module>
+                <module>authorization</module>
+                <module>transaction-logger</module>
+                <!-- The Switch IT runs the executable jars packaged by these modules. -->
+                <module>switch</module>
+            </modules>
+        </profile>
+
         <profile>
             <id>authorization</id>
             <modules>
@@ -190,6 +209,24 @@
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <configuration>
+                        <skipITs>${skipITs}</skipITs>
+                        <failIfNoTests>true</failIfNoTests>
+                        <reportsDirectory>${project.build.directory}/${integrationTestReportsDirectory}</reportsDirectory>
+                        <summaryFile>${project.build.directory}/${integrationTestReportsDirectory}/failsafe-summary.xml</summaryFile>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>integration-test</goal>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>

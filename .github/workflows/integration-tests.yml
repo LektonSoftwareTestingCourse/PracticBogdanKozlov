@@ -1,0 +1,46 @@
+name: Practice 6 integration tests
+
+on:
+  push:
+    paths:
+      - 'services/**'
+      - 'docs/practice-6/**'
+      - '.github/workflows/integration-tests.yml'
+  pull_request:
+    paths:
+      - 'services/**'
+      - 'docs/practice-6/**'
+      - '.github/workflows/integration-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Verify integration tests (first run)
+        run: mvn -B -ntp -f services/pom.xml -Pintegration-tests verify
+      - name: Upload first run results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-tests-first-run
+          path: services/*/target/failsafe-reports/
+      - name: Verify integration tests again on the same runner
+        id: repeat
+        run: mvn -B -ntp -f services/pom.xml -Pintegration-tests -DintegrationTestReportsDirectory=failsafe-reports-repeat verify
+      - name: Upload second run results
+        if: always() && steps.repeat.outcome != 'skipped'
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-tests-second-run
+          path: services/*/target/failsafe-reports-repeat/

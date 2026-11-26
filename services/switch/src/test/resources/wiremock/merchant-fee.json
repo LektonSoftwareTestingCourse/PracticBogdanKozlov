@@ -1,0 +1,8 @@
+{
+  "request": {"method": "POST", "urlPath": "/api/simulator/merchant/fee"},
+  "response": {
+    "status": 200,
+    "jsonBody": {"acquirerFee": 27},
+    "headers": {"Content-Type": "application/json"}
+  }
+}
